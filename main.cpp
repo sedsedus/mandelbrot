@@ -53,14 +53,18 @@ int main()
 {
     auto constexpr width = 1000;
     auto constexpr height = 1000;
-    auto planeSize = 2.0;
-    auto planeCenter = 0.0;
+    auto planeXSize = 2.0;
+    auto planeYSize = 2.0;
+    auto planeXCenter = 0.0;
+    auto planeYCenter = 0.0;
     auto maxIterations = 10;
     auto const maxValue = 10000;
 
     auto maxColorValue = 255;
     sf::RenderWindow window(sf::VideoMode(width, height), "Mandelbrot");
 
+    sf::VertexArray pts;
+    pts.resize(width * height);
     while (window.isOpen()) {
         // handle events
         sf::Event event;
@@ -69,29 +73,39 @@ int main()
                 window.close();
             } else if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Up) {
-                    maxIterations++;
+                    planeYCenter -= planeYSize / 10;
                 } else if (event.key.code == sf::Keyboard::Down) {
+                    planeYCenter += planeYSize / 10;
                     maxIterations--;
                 } else if (event.key.code == sf::Keyboard::Left) {
-                    planeSize--;
-                    printf("planeSize: %0.1f\n", planeSize);
+                    planeXCenter -= planeXSize / 10;
                 } else if (event.key.code == sf::Keyboard::Right) {
-                    planeSize++;
-                    printf("planeSize: %0.1f\n", planeSize);
+                    planeXCenter += planeXSize / 10;
+                } else if (event.key.code == sf::Keyboard::Add) {
+                    maxIterations++;
+                } else if (event.key.code == sf::Keyboard::Subtract) {
+                    maxIterations--;
+                } else if (event.key.code == sf::Keyboard::PageDown) {
+                    planeXSize *= 0.9;
+                    planeYSize *= 0.9;
+                } else if (event.key.code == sf::Keyboard::PageUp) {
+                    planeXSize *= 1.1;
+                    planeYSize *= 1.1;
                 } else if (event.type == sf::Event::MouseWheelMoved) {
                     float dzoom = static_cast<float>(-event.mouseWheel.delta);
                 }
             }
         }
 
-        auto mapToSize = [planeSize](auto v, auto size) { return mapToRange(v, 0.0, static_cast<Mitype>(size), -planeSize, planeSize); };
+        auto mapToSize = [](auto v, auto size, auto planeCenter, auto planeSize) {
+            return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize/2, planeCenter + planeSize/2);
+        };
 
-        sf::VertexArray pts;
         for (auto x = 0; x < width; ++x) {
             for (auto y = 0; y < height; ++y) {
                 sf::Color color;
-                auto xScaled = mapToSize(static_cast<Mitype>(x), static_cast<Mitype>(width));
-                auto yScaled = mapToSize(static_cast<Mitype>(y), static_cast<Mitype>(height));
+                auto xScaled = mapToSize(static_cast<Mitype>(x), static_cast<Mitype>(width), planeXCenter, planeXSize);
+                auto yScaled = mapToSize(static_cast<Mitype>(y), static_cast<Mitype>(height), planeYCenter, planeYSize);
                 Mtype p { xScaled, yScaled };
                 if (std::abs(p) > 2) {
                     color = sf::Color::White;
@@ -102,7 +116,7 @@ int main()
                     color = sf::Color(scaled, scaled, scaled);
                     // printf("(x,y,it): (%0.2f, %0.2f, %d)\n",xScaled,yScaled,iterations);
                 }
-                pts.append(sf::Vertex({ static_cast<float>(x), static_cast<float>(y) }, color));
+                pts[x + height*y] = (sf::Vertex({ static_cast<float>(x), static_cast<float>(y) }, color));
                 // printf("%d: %0.2f\n", i, mandelbrot(i, 5).real());
             }
         }
