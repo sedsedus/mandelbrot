@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <unordered_map>
 #include "mandelbrot.h"
+#include <functional>
+#include <utility>
+
 using Mitype = double;
 using Mtype = std::complex<Mitype>;
 
@@ -47,21 +50,80 @@ void SetZoomAt(sf::RenderWindow &window, sf::Vector2i pos, float zoom)
     window.setView(view);
 }
 
-sf::Color Mandelbrot::getColor(int iterations, int maxIterations) const
+sf::Color Mandelbrot::getColorOld(int iterations, int maxIterations)
 {
-    // todo: colormap
-
     auto scaled1 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
     auto scaled2 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)100, 0.0);
     auto scaled3 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
     return sf::Color(scaled1, scaled2, scaled3);
+}
+sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
+{
+    struct mapping {
+        sf::Vector2i range;
+        std::function<int(int)> fun;
+    };
+    auto getMapping = [iterations](const auto &mapping) {
+        for (auto m : mapping) {
+            if ((m.range.x <= iterations) && (iterations <= m.range.y)) {
+                return m.fun(iterations);
+            }
+        }
+        return 0;
+    };
+
+    // a = (y2-y1)/(x2-x1)
+    // y = ax + b
+    // b = y1 - a*x1
+    auto findAB = [](auto x1, auto y1, auto x2, auto y2) {
+        auto a = (y2 - y1) / (x2 - x1);
+        auto b = y1 - a * x1;
+        return std::pair { a, b };
+    };
+    auto const first = sf::Vector2i { 0, maxIterations / 3 };
+    auto const second = sf::Vector2i { maxIterations / 3, 2 * maxIterations / 3 };
+    auto const third = sf::Vector2i { 2 * maxIterations / 3, maxIterations };
+
+    auto const getLn = [findAB](auto range, bool rising) {
+        auto y1 = rising ? 0.0 : maxColorValue;
+        auto y2 = rising ? maxColorValue : 0.0;
+        auto ab = findAB(range.x, y1, range.y, y2);
+        return [ab](int i) { return ab.first * i + ab.second; };
+    };
+    std::vector<mapping> redColor = { { first,
+                                        [](int i) {
+                                            (void)i;
+                                            return 0;
+                                        } },
+                                      { second, [second, getLn](int i) { return getLn(second, true)(i); } },
+                                      { third, [](int i) {
+                                           (void)i;
+                                           return maxColorValue;
+                                       } } };
+
+    std::vector<mapping> greenColor = { { first, [first, getLn](int i) { return getLn(first, true)(i); } },
+                                        { second,
+                                          [](int i) {
+                                              (void)i;
+                                              return maxColorValue;
+                                          } },
+                                        { third, [third, getLn](int i) { return getLn(third, false)(i); } } };
+
+    std::vector<mapping> blueColor = { { first,
+                                         [](int i) {
+                                             (void)i;
+                                             return maxColorValue;
+                                         } },
+                                       { second, [second, getLn](int i) { return getLn(second, false)(i); } },
+                                       { third, [](int i) {
+                                            (void)i;
+                                            return 0;
+                                        } } };
+    return sf::Color(getMapping(redColor), getMapping(greenColor), getMapping(blueColor));
 };
 
-Mandelbrot::Mandelbrot(int width, int height)
-    : mWidth(width),
-      mHeight(height)
+Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
-    
 }
 
 int Mandelbrot::run()
