@@ -15,4 +15,4 @@ target_compile_features(mandelbrot PRIVATE cxx_std_17)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -O2")
 
-target_sources(mandelbrot PRIVATE main.cpp)
+target_sources(mandelbrot PRIVATE main.cpp mandelbrot.cpp)
