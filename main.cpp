@@ -46,6 +46,17 @@ void SetZoomAt(sf::RenderWindow &window, sf::Vector2i pos, float zoom)
     view.move(offsetCoords);
     window.setView(view);
 }
+
+auto const maxColorValue = 255;
+sf::Color getColor(int iterations, int maxIterations)
+{
+    // todo: colormap
+
+    auto scaled1 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
+    auto scaled2 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)100, 0.0);
+    auto scaled3 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
+    return sf::Color(scaled1, scaled2, scaled3);
+};
 int main()
 {
     auto constexpr width = 1000;
@@ -63,12 +74,6 @@ int main()
 
     auto mapToSize = [](auto v, auto size, auto planeCenter, auto planeSize) {
         return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
-    };
-    auto getColor = [maxIterations](int iterations) {
-        auto scaled1 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
-        auto scaled2 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)100, 0.0);
-        auto scaled3 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
-        return sf::Color(scaled1, scaled2, scaled3);
     };
     for (auto x = 0; x < width; ++x) {
         for (auto y = 0; y < height; ++y) {
