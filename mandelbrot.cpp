@@ -200,14 +200,11 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
                 auto mouse = window.mapPixelToCoords(mousePos);
                 Vector2d curPos = { mapToPlaneWidth(mouse.x), mapToPlaneHeight(mouse.y) };
                 auto diff = mousePosWhenPres - curPos;
-                printf("Moved middle (%f, %f) - (%f, %f) = (%f, %f)\n", mousePosWhenPres.x, mousePosWhenPres.y, curPos.x, curPos.y, diff.x,
-                diff.y);
                 mPlaneCenter.x -= diff.x;
                 mPlaneCenter.y -= diff.y;
                 mousePosWhenPres = getPlaneMouse(window);
             }
         }
-        reloadLUT();
         mRecalcNeeded = true;
     }
 }
@@ -228,23 +225,14 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
     auto wmouse = GetWorldMouse(window);
     return { mapToPlaneWidth(wmouse.x), mapToPlaneHeight(wmouse.y) };
 }
-void Mandelbrot::reloadLUT()
-{
-    for (auto x = 0; x < mWidth; ++x) {
-        for (auto y = 0; y < mHeight; ++y) {
-            auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
-            auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
-            Mtype p { xScaled, yScaled };
-            pointToMPoint[ptToIdx(x, y)] = p;
-        };
-    }
-}
 void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
 {
     for (auto x = 0; x < mWidth; ++x) {
         for (auto y = 0; y < mHeight; ++y) {
             auto idx = ptToIdx(x, y);
-            auto p = pointToMPoint[idx];
+            auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
+            auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
+            Mtype p { xScaled, yScaled };
             auto iterations = mandelbrot(p, mMaxIterations);
             pts[idx].color = getColor(iterations, mMaxIterations);
         }
@@ -261,7 +249,6 @@ int Mandelbrot::run()
             pts[ptToIdx(x, y)] = sf::Vertex({ static_cast<float>(x), static_cast<float>(y) }, sf::Color::White);
         }
     }
-    reloadLUT();
     while (window.isOpen()) {
         // handle events
         handleEvent(window);
