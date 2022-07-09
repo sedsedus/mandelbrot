@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 #include <complex>
-#include <unordered_map>
 
 class Mandelbrot
 {
@@ -22,9 +21,7 @@ private:
     Mitype mapToPlaneWidth(Mitype v) const;
     Mitype mapToPlaneHeight(Mitype v) const;
     Vector2d getPlaneMouse(sf::RenderWindow &window) const;
-    void reloadLUT();
     void calcMandelbrot(sf::VertexArray &pts);
-    std::unordered_map<int, Mtype> pointToMPoint;
     const int mWidth;
     const int mHeight;
     int mMaxIterations = 100;
