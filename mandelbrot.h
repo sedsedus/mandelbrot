@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <complex>
+#include <unordered_map>
+
 class Mandelbrot
 {
 public:
@@ -14,11 +16,15 @@ private:
 
     int ptToIdx(int x, int y) const;
     int mandelbrot(Mtype c, int maxIterations) const;
-
+    void handleEvent(sf::RenderWindow &window);
+    Mitype mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const;
+    void reloadLUT();
+    std::unordered_map<int, Mtype> pointToMPoint;
     const int mWidth;
     const int mHeight;
-    int mMaxIterations = 35;
+    int mMaxIterations = 100;
     sf::Vector2<double> mPlaneSize { 3.0, 3.0 };
     sf::Vector2<double> mPlaneCenter { 0.0, 0.0 };
     static auto constexpr maxColorValue = 255;
+
 };
