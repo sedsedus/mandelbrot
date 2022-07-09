@@ -121,12 +121,28 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
     return sf::Color(getMapping(redColor), getMapping(greenColor), getMapping(blueColor));
 };
 
+void MoveView(sf::RenderWindow &window, sf::Vector2f offset)
+{
+    sf::View view = window.getView();
+    view.move(offset);
+    window.setView(view);
+}
 Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
+}
+template <typename T>
+T clip(T n, T lower, T upper)
+{
+    return std::max(lower, std::min(n, upper));
 }
 void Mandelbrot::handleEvent(sf::RenderWindow &window)
 {
     sf::Event event;
+
+    bool isLeftPressed = false;
+    bool isRightPressed = false;
+    bool isMiddlePressed = false;
+    sf::Vector2f mousePosWhenMiddlePress;
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
@@ -150,16 +166,68 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
             } else if (event.key.code == sf::Keyboard::PageUp) {
                 mPlaneSize.x *= 1.1;
                 mPlaneSize.y *= 1.1;
-            } else if (event.type == sf::Event::MouseWheelMoved) {
-                // float dzoom = static_cast<float>(-event.mouseWheel.delta);
             }
             reloadLUT();
+        } else if (event.type == sf::Event::MouseWheelMoved) {
+            float dzoom = static_cast<float>(-event.mouseWheel.delta) / 10;
+            Vector2d mpoint = getPlaneMouse(window);
+            mPlaneSize.x *= (1 + dzoom);
+            mPlaneSize.y *= (1 + dzoom);
+            Vector2d mpointz = getPlaneMouse(window);
+            auto diff = mpoint - mpointz;
+            mPlaneCenter.x += diff.x;
+            mPlaneCenter.y += diff.y;
+            reloadLUT();
+        } else if (event.type == sf::Event::MouseButtonPressed) {
+            if (event.mouseButton.button == sf::Mouse::Button::Left) {
+                isLeftPressed = true;
+            } else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                isRightPressed = true;
+            } else if (event.mouseButton.button == sf::Mouse::Button::Middle) {
+                isMiddlePressed = true;
+                mousePosWhenMiddlePress = GetWorldMouse(window);
+            }
+        } else if (event.type == sf::Event::MouseButtonReleased) {
+            if (event.mouseButton.button == sf::Mouse::Button::Left) {
+                isLeftPressed = false;
+            } else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+                isRightPressed = false;
+            } else if (event.mouseButton.button == sf::Mouse::Button::Middle) {
+                isMiddlePressed = false;
+            }
+        } else if (event.type == sf::Event::MouseMoved) {
+            // printf("Move world (%f, %f) mapped (%f, %f)\n", event.mouseMove.x, event.mouseMove.y);
+            if (isLeftPressed) {
+            } else if (isRightPressed) {
+            } else if (isMiddlePressed) {
+                auto mousePos = sf::Vector2i(event.mouseMove.x, event.mouseMove.y);
+                auto mouse = window.mapPixelToCoords(mousePos);
+                auto diff = mousePosWhenMiddlePress - mouse;
+                // printf("Moved middle (%f, %f) - (%f, %f) = (%f, %f)\n", mousePosWhenMiddlePress.x, mousePosWhenMiddlePress.y, mouse.x, mouse.y, diff.x,
+                // diff.y);
+                MoveView(window, diff);
+                mousePosWhenMiddlePress = window.mapPixelToCoords(mousePos);
+            }
         }
+        mRecalcNeeded = true;
     }
 }
 Mitype Mandelbrot::mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const
 {
     return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
+}
+Mitype Mandelbrot::mapToPlaneWidth(Mitype x) const
+{
+    return mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
+}
+Mitype Mandelbrot::mapToPlaneHeight(Mitype y) const
+{
+    return mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
+}
+Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
+{
+    auto wmouse = GetWorldMouse(window);
+    return { mapToPlaneWidth(wmouse.x), mapToPlaneHeight(wmouse.y) };
 }
 void Mandelbrot::reloadLUT()
 {
@@ -170,6 +238,17 @@ void Mandelbrot::reloadLUT()
             Mtype p { xScaled, yScaled };
             pointToMPoint[ptToIdx(x, y)] = p;
         };
+    }
+}
+void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
+{
+    for (auto x = 0; x < mWidth; ++x) {
+        for (auto y = 0; y < mHeight; ++y) {
+            auto idx = ptToIdx(x, y);
+            auto p = pointToMPoint[idx];
+            auto iterations = mandelbrot(p, mMaxIterations);
+            pts[idx].color = getColor(iterations, mMaxIterations);
+        }
     }
 }
 int Mandelbrot::run()
@@ -187,13 +266,8 @@ int Mandelbrot::run()
     while (window.isOpen()) {
         // handle events
         handleEvent(window);
-        for (auto x = 0; x < mWidth; ++x) {
-            for (auto y = 0; y < mHeight; ++y) {
-                auto idx = ptToIdx(x, y);
-                auto p = pointToMPoint[idx];
-                auto iterations = mandelbrot(p, mMaxIterations);
-                pts[idx].color = getColor(iterations, mMaxIterations);
-            }
+        if (mRecalcNeeded) {
+            calcMandelbrot(pts);
         }
         // draw it
         window.clear();
