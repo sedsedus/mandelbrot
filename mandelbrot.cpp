@@ -139,10 +139,10 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
 {
     sf::Event event;
 
-    bool isLeftPressed = false;
-    bool isRightPressed = false;
-    bool isMiddlePressed = false;
-    sf::Vector2f mousePosWhenMiddlePress;
+    static bool isLeftPressed = false;
+    static bool isRightPressed = false;
+    static bool isMiddlePressed = false;
+    static Vector2d mousePosWhenPres;
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
@@ -167,25 +167,23 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
                 mPlaneSize.x *= 1.1;
                 mPlaneSize.y *= 1.1;
             }
-            reloadLUT();
         } else if (event.type == sf::Event::MouseWheelMoved) {
             float dzoom = static_cast<float>(-event.mouseWheel.delta) / 10;
-            Vector2d mpoint = getPlaneMouse(window);
+            auto mpoint = getPlaneMouse(window);
             mPlaneSize.x *= (1 + dzoom);
             mPlaneSize.y *= (1 + dzoom);
-            Vector2d mpointz = getPlaneMouse(window);
+            auto mpointz = getPlaneMouse(window);
             auto diff = mpoint - mpointz;
             mPlaneCenter.x += diff.x;
             mPlaneCenter.y += diff.y;
-            reloadLUT();
         } else if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Button::Left) {
+                mousePosWhenPres = getPlaneMouse(window);
                 isLeftPressed = true;
             } else if (event.mouseButton.button == sf::Mouse::Button::Right) {
                 isRightPressed = true;
             } else if (event.mouseButton.button == sf::Mouse::Button::Middle) {
                 isMiddlePressed = true;
-                mousePosWhenMiddlePress = GetWorldMouse(window);
             }
         } else if (event.type == sf::Event::MouseButtonReleased) {
             if (event.mouseButton.button == sf::Mouse::Button::Left) {
@@ -198,17 +196,18 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
         } else if (event.type == sf::Event::MouseMoved) {
             // printf("Move world (%f, %f) mapped (%f, %f)\n", event.mouseMove.x, event.mouseMove.y);
             if (isLeftPressed) {
-            } else if (isRightPressed) {
-            } else if (isMiddlePressed) {
                 auto mousePos = sf::Vector2i(event.mouseMove.x, event.mouseMove.y);
                 auto mouse = window.mapPixelToCoords(mousePos);
-                auto diff = mousePosWhenMiddlePress - mouse;
-                // printf("Moved middle (%f, %f) - (%f, %f) = (%f, %f)\n", mousePosWhenMiddlePress.x, mousePosWhenMiddlePress.y, mouse.x, mouse.y, diff.x,
-                // diff.y);
-                MoveView(window, diff);
-                mousePosWhenMiddlePress = window.mapPixelToCoords(mousePos);
+                Vector2d curPos = { mapToPlaneWidth(mouse.x), mapToPlaneHeight(mouse.y) };
+                auto diff = mousePosWhenPres - curPos;
+                printf("Moved middle (%f, %f) - (%f, %f) = (%f, %f)\n", mousePosWhenPres.x, mousePosWhenPres.y, curPos.x, curPos.y, diff.x,
+                diff.y);
+                mPlaneCenter.x -= diff.x;
+                mPlaneCenter.y -= diff.y;
+                mousePosWhenPres = getPlaneMouse(window);
             }
         }
+        reloadLUT();
         mRecalcNeeded = true;
     }
 }
