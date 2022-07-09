@@ -2,7 +2,6 @@
 #include <SFML/Graphics.hpp>
 #include <complex>
 #include <cstdio>
-#include <unordered_map>
 #include "mandelbrot.h"
 #include <functional>
 #include <utility>
@@ -63,7 +62,7 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
         sf::Vector2i range;
         std::function<int(int)> fun;
     };
-    auto getMapping = [iterations](const auto &mapping) {
+    auto const getMapping = [iterations](const auto &mapping) {
         for (auto m : mapping) {
             if ((m.range.x <= iterations) && (iterations <= m.range.y)) {
                 return m.fun(iterations);
@@ -75,7 +74,7 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
     // a = (y2-y1)/(x2-x1)
     // y = ax + b
     // b = y1 - a*x1
-    auto findAB = [](auto x1, auto y1, auto x2, auto y2) {
+    auto const findAB = [](auto x1, auto y1, auto x2, auto y2) {
         auto a = (y2 - y1) / (x2 - x1);
         auto b = y1 - a * x1;
         return std::pair { a, b };
@@ -125,65 +124,69 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
 Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
 }
-
+void Mandelbrot::handleEvent(sf::RenderWindow &window)
+{
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed) {
+            window.close();
+        } else if (event.type == sf::Event::KeyPressed) {
+            if (event.key.code == sf::Keyboard::Up) {
+                mPlaneCenter.y -= mPlaneSize.y / 10;
+            } else if (event.key.code == sf::Keyboard::Down) {
+                mPlaneCenter.y += mPlaneSize.y / 10;
+                mMaxIterations--;
+            } else if (event.key.code == sf::Keyboard::Left) {
+                mPlaneCenter.x -= mPlaneSize.x / 10;
+            } else if (event.key.code == sf::Keyboard::Right) {
+                mPlaneCenter.x += mPlaneSize.x / 10;
+            } else if (event.key.code == sf::Keyboard::Add) {
+                mMaxIterations++;
+            } else if (event.key.code == sf::Keyboard::Subtract) {
+                mMaxIterations--;
+            } else if (event.key.code == sf::Keyboard::PageDown) {
+                mPlaneSize.x *= 0.9;
+                mPlaneSize.y *= 0.9;
+            } else if (event.key.code == sf::Keyboard::PageUp) {
+                mPlaneSize.x *= 1.1;
+                mPlaneSize.y *= 1.1;
+            } else if (event.type == sf::Event::MouseWheelMoved) {
+                // float dzoom = static_cast<float>(-event.mouseWheel.delta);
+            }
+            reloadLUT();
+        }
+    }
+}
+Mitype Mandelbrot::mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const
+{
+    return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
+}
+void Mandelbrot::reloadLUT()
+{
+    for (auto x = 0; x < mWidth; ++x) {
+        for (auto y = 0; y < mHeight; ++y) {
+            auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
+            auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
+            Mtype p { xScaled, yScaled };
+            pointToMPoint[ptToIdx(x, y)] = p;
+        };
+    }
+}
 int Mandelbrot::run()
 {
     sf::RenderWindow window(sf::VideoMode(mWidth, mHeight), "Mandelbrot");
     sf::VertexArray pts;
-    std::unordered_map<int, Mtype> pointToMPoint;
     pts.resize(mWidth * mHeight);
 
-    auto mapToSize = [](auto v, auto size, auto planeCenter, auto planeSize) {
-        return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
-    };
     for (auto x = 0; x < mWidth; ++x) {
         for (auto y = 0; y < mHeight; ++y) {
             pts[ptToIdx(x, y)] = sf::Vertex({ static_cast<float>(x), static_cast<float>(y) }, sf::Color::White);
         }
     }
-    auto loadLUT = [this, mapToSize, &pointToMPoint]() {
-        for (auto x = 0; x < mWidth; ++x) {
-            for (auto y = 0; y < mHeight; ++y) {
-                auto xScaled = mapToSize(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
-                auto yScaled = mapToSize(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
-                Mtype p { xScaled, yScaled };
-                pointToMPoint[ptToIdx(x, y)] = p;
-            };
-        }
-    };
-    loadLUT();
+    reloadLUT();
     while (window.isOpen()) {
         // handle events
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            } else if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Up) {
-                    mPlaneCenter.y -= mPlaneSize.y / 10;
-                } else if (event.key.code == sf::Keyboard::Down) {
-                    mPlaneCenter.y += mPlaneSize.y / 10;
-                    mMaxIterations--;
-                } else if (event.key.code == sf::Keyboard::Left) {
-                    mPlaneCenter.x -= mPlaneSize.x / 10;
-                } else if (event.key.code == sf::Keyboard::Right) {
-                    mPlaneCenter.x += mPlaneSize.x / 10;
-                } else if (event.key.code == sf::Keyboard::Add) {
-                    mMaxIterations++;
-                } else if (event.key.code == sf::Keyboard::Subtract) {
-                    mMaxIterations--;
-                } else if (event.key.code == sf::Keyboard::PageDown) {
-                    mPlaneSize.x *= 0.9;
-                    mPlaneSize.y *= 0.9;
-                } else if (event.key.code == sf::Keyboard::PageUp) {
-                    mPlaneSize.x *= 1.1;
-                    mPlaneSize.y *= 1.1;
-                } else if (event.type == sf::Event::MouseWheelMoved) {
-                    // float dzoom = static_cast<float>(-event.mouseWheel.delta);
-                }
-                loadLUT();
-            }
-        }
+        handleEvent(window);
         for (auto x = 0; x < mWidth; ++x) {
             for (auto y = 0; y < mHeight; ++y) {
                 auto idx = ptToIdx(x, y);
