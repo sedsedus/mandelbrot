@@ -5,6 +5,7 @@
 #include "mandelbrot.h"
 #include <functional>
 #include <utility>
+#include "profile.h"
 
 using Mitype = double;
 using Mtype = std::complex<Mitype>;
@@ -232,6 +233,20 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
 }
 void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
 {
+    static auto getCachedColor = [this](auto iterations, auto maxIterations) {
+        static std::unordered_map<int, sf::Color> cache;
+        static auto lastMaxIterations = 0;
+        if(lastMaxIterations != maxIterations){
+            lastMaxIterations = maxIterations;
+            cache.clear();
+        }
+        if (auto c = cache.find(iterations); c != std::end(cache)) {
+            return c->second;
+        }
+        auto c = getColor(iterations, maxIterations);
+        cache[iterations] = c;
+        return c;
+    };
     for (auto pt : mPixelPos) {
         auto &x = pt.first;
         auto &y = pt.second;
@@ -240,9 +255,10 @@ void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
         auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
         Mtype p { xScaled, yScaled };
         auto iterations = mandelbrot(p, mMaxIterations);
-        pts[idx].color = getColor(iterations, mMaxIterations);
+        pts[idx].color = getCachedColor(iterations, mMaxIterations);
     }
 }
+
 int Mandelbrot::run()
 {
     sf::RenderWindow window(sf::VideoMode(mWidth, mHeight), "Mandelbrot");
@@ -255,13 +271,11 @@ int Mandelbrot::run()
         }
     }
     while (window.isOpen()) {
-        // handle events
         handleEvent(window);
         if (mRecalcNeeded) {
-            calcMandelbrot(pts);
+            CalcExecTimeWrapper<1>("calcMandelbrot", [this, &pts]() { calcMandelbrot(pts); });
             mRecalcNeeded = false;
         }
-        // draw it
         window.clear();
         window.draw(pts);
         window.display();

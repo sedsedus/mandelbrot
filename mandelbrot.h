@@ -1,5 +1,9 @@
+#pragma once
+
 #include <SFML/Graphics.hpp>
 #include <complex>
+#include <utility>
+#include <vector>
 
 class Mandelbrot
 {
@@ -24,7 +28,7 @@ private:
     void calcMandelbrot(sf::VertexArray &pts);
     const int mWidth;
     const int mHeight;
-    int mMaxIterations = 100;
+    int mMaxIterations = 10;
     sf::Vector2<double> mPlaneSize { 3.0, 3.0 };
     sf::Vector2<double> mPlaneCenter { 0.0, 0.0 };
     static auto constexpr maxColorValue = 255;
