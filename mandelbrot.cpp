@@ -233,10 +233,10 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
 }
 void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
 {
-    static auto getCachedColor = [this](auto iterations, auto maxIterations) {
+    static auto getCachedColor = [](auto iterations, auto maxIterations) {
         static std::unordered_map<int, sf::Color> cache;
         static auto lastMaxIterations = 0;
-        if(lastMaxIterations != maxIterations){
+        if (lastMaxIterations != maxIterations) {
             lastMaxIterations = maxIterations;
             cache.clear();
         }
@@ -247,12 +247,17 @@ void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
         cache[iterations] = c;
         return c;
     };
+    // optimized (cached) mapping to range which results in using a coefficient and an offset
+    auto xCoeff = static_cast<Mitype>(mWidth) / (mPlaneSize.x);
+    auto xOffset = mPlaneCenter.x - mPlaneSize.x / 2;
+    auto yCoeff = static_cast<Mitype>(mHeight) / (mPlaneSize.y);
+    auto yOffset = mPlaneCenter.y - mPlaneSize.y / 2;
     for (auto pt : mPixelPos) {
         auto &x = pt.first;
         auto &y = pt.second;
         auto idx = ptToIdx(x, y);
-        auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
-        auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
+        auto xScaled = x / xCoeff + xOffset;
+        auto yScaled = y / yCoeff + yOffset;
         Mtype p { xScaled, yScaled };
         auto iterations = mandelbrot(p, mMaxIterations);
         pts[idx].color = getCachedColor(iterations, mMaxIterations);
