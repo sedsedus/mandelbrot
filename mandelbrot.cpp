@@ -254,6 +254,7 @@ int Mandelbrot::run()
         handleEvent(window);
         if (mRecalcNeeded) {
             calcMandelbrot(pts);
+            mRecalcNeeded = false;
         }
         // draw it
         window.clear();
