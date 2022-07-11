@@ -29,4 +29,5 @@ private:
     sf::Vector2<double> mPlaneCenter { 0.0, 0.0 };
     static auto constexpr maxColorValue = 255;
     bool mRecalcNeeded{true};
+    std::vector<std::pair<int, int>> mPixelPos;
 };
