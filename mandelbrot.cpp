@@ -129,6 +129,11 @@ void MoveView(sf::RenderWindow &window, sf::Vector2f offset)
 }
 Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
+    for (auto x = 0; x < mWidth; ++x) {
+        for (auto y = 0; y < mHeight; ++y) {
+            mPixelPos.push_back({ x, y });
+        }
+    }
 }
 template <typename T>
 T clip(T n, T lower, T upper)
@@ -227,15 +232,15 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
 }
 void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
 {
-    for (auto x = 0; x < mWidth; ++x) {
-        for (auto y = 0; y < mHeight; ++y) {
-            auto idx = ptToIdx(x, y);
-            auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
-            auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
-            Mtype p { xScaled, yScaled };
-            auto iterations = mandelbrot(p, mMaxIterations);
-            pts[idx].color = getColor(iterations, mMaxIterations);
-        }
+    for (auto pt : mPixelPos) {
+        auto &x = pt.first;
+        auto &y = pt.second;
+        auto idx = ptToIdx(x, y);
+        auto xScaled = mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
+        auto yScaled = mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
+        Mtype p { xScaled, yScaled };
+        auto iterations = mandelbrot(p, mMaxIterations);
+        pts[idx].color = getColor(iterations, mMaxIterations);
     }
 }
 int Mandelbrot::run()
