@@ -29,8 +29,8 @@ private:
     const int mWidth;
     const int mHeight;
     int mMaxIterations = 10;
-    sf::Vector2<double> mPlaneSize { 3.0, 3.0 };
-    sf::Vector2<double> mPlaneCenter { 0.0, 0.0 };
+    sf::Vector2<Mitype> mPlaneSize { 3.0, 3.0 };
+    sf::Vector2<Mitype> mPlaneCenter { 0.0, 0.0 };
     static auto constexpr maxColorValue = 255;
     bool mRecalcNeeded{true};
     std::vector<std::pair<int, int>> mPixelPos;
