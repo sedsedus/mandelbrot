@@ -3,7 +3,7 @@
 
 int main()
 {
-    Mandelbrot m(500, 500);
+    Mandelbrot m(1000, 1000);
     return m.run();
     for (int i = 0; i < 31; ++i) {
         auto c = m.getColor(i, 30);
