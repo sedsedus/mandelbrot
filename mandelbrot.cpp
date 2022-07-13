@@ -10,15 +10,6 @@
 using Mitype = double;
 using Mtype = std::complex<Mitype>;
 
-int Mandelbrot::mandelbrot(Mtype c, int maxIterations) const
-{
-    Mtype m = 0;
-    auto i = 0;
-    for (i = 0; i < maxIterations && std::abs(m) < 2; ++i) {
-        m = m * m + c;
-    }
-    return i;
-}
 template <typename T>
 T constexpr mapToRange(T v, T vMin, T vMax, T toMin, T toMax)
 {
@@ -37,19 +28,6 @@ sf::Vector2f GetWorldMouse(sf::RenderWindow &window)
     return worldPos;
 }
 
-void SetZoomAt(sf::RenderWindow &window, sf::Vector2i pos, float zoom)
-{
-    const sf::Vector2f beforeCoord { GetWorldMouse(window) };
-    sf::View view { window.getDefaultView() };
-    view.zoom(zoom);
-    window.setView(view);
-
-    const sf::Vector2f afterCoord { GetWorldMouse(window) };
-    const sf::Vector2f offsetCoords { beforeCoord - afterCoord };
-    view.move(offsetCoords);
-    window.setView(view);
-}
-
 sf::Color Mandelbrot::getColorOld(int iterations, int maxIterations)
 {
     auto scaled1 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
@@ -57,6 +35,7 @@ sf::Color Mandelbrot::getColorOld(int iterations, int maxIterations)
     auto scaled3 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
     return sf::Color(scaled1, scaled2, scaled3);
 }
+
 sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
 {
     struct mapping {
@@ -122,25 +101,10 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
     return sf::Color(getMapping(redColor), getMapping(greenColor), getMapping(blueColor));
 };
 
-void MoveView(sf::RenderWindow &window, sf::Vector2f offset)
-{
-    sf::View view = window.getView();
-    view.move(offset);
-    window.setView(view);
-}
 Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
-    for (auto x = 0; x < mWidth; ++x) {
-        for (auto y = 0; y < mHeight; ++y) {
-            mPixelPos.push_back({ x, y });
-        }
-    }
 }
-template <typename T>
-T clip(T n, T lower, T upper)
-{
-    return std::max(lower, std::min(n, upper));
-}
+
 void Mandelbrot::handleEvent(sf::RenderWindow &window)
 {
     sf::Event event;
@@ -163,9 +127,9 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
             } else if (event.key.code == sf::Keyboard::Right) {
                 mPlaneCenter.x += mPlaneSize.x / 10;
             } else if (event.key.code == sf::Keyboard::Add) {
-                mMaxIterations++;
+                mMaxIterations += 1.1;
             } else if (event.key.code == sf::Keyboard::Subtract) {
-                mMaxIterations--;
+                mMaxIterations -= 1.1;
             } else if (event.key.code == sf::Keyboard::PageDown) {
                 mPlaneSize.x *= 0.9;
                 mPlaneSize.y *= 0.9;
@@ -206,89 +170,63 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
                 auto mouse = window.mapPixelToCoords(mousePos);
                 Vector2d curPos = { mapToPlaneWidth(mouse.x), mapToPlaneHeight(mouse.y) };
                 auto diff = mousePosWhenPres - curPos;
-                mPlaneCenter.x -= diff.x;
-                mPlaneCenter.y -= diff.y;
+                mPlaneCenter.x += diff.x;
+                mPlaneCenter.y += diff.y;
                 mousePosWhenPres = getPlaneMouse(window);
             }
         }
         mRecalcNeeded = true;
     }
 }
+
 Mitype Mandelbrot::mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const
 {
     return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
 }
+
 Mitype Mandelbrot::mapToPlaneWidth(Mitype x) const
 {
     return mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
 }
+
 Mitype Mandelbrot::mapToPlaneHeight(Mitype y) const
 {
     return mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
 }
+
 Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
 {
     auto wmouse = GetWorldMouse(window);
     return { mapToPlaneWidth(wmouse.x), mapToPlaneHeight(wmouse.y) };
 }
-void Mandelbrot::calcMandelbrot(sf::VertexArray &pts)
-{
-    static auto getCachedColor = [](auto iterations, auto maxIterations) {
-        static std::unordered_map<int, sf::Color> cache;
-        static auto lastMaxIterations = 0;
-        if (lastMaxIterations != maxIterations) {
-            lastMaxIterations = maxIterations;
-            cache.clear();
-        }
-        if (auto c = cache.find(iterations); c != std::end(cache)) {
-            return c->second;
-        }
-        auto c = getColor(iterations, maxIterations);
-        cache[iterations] = c;
-        return c;
-    };
-    // optimized (cached) mapping to range which results in using a coefficient and an offset
-    auto xCoeff = static_cast<Mitype>(mWidth) / (mPlaneSize.x);
-    auto xOffset = mPlaneCenter.x - mPlaneSize.x / 2;
-    auto yCoeff = static_cast<Mitype>(mHeight) / (mPlaneSize.y);
-    auto yOffset = mPlaneCenter.y - mPlaneSize.y / 2;
-    for (auto pt : mPixelPos) {
-        auto &x = pt.first;
-        auto &y = pt.second;
-        auto idx = ptToIdx(x, y);
-        auto xScaled = x / xCoeff + xOffset;
-        auto yScaled = y / yCoeff + yOffset;
-        Mtype p { xScaled, yScaled };
-        auto iterations = mandelbrot(p, mMaxIterations);
-        pts[idx].color = getCachedColor(iterations, mMaxIterations);
-    }
-}
 
 int Mandelbrot::run()
 {
     sf::RenderWindow window(sf::VideoMode(mWidth, mHeight), "Mandelbrot");
-    sf::VertexArray pts;
-    pts.resize(mWidth * mHeight);
+    auto sizeV = sf::Vector2f { (float)mWidth, (float)mHeight };
+    sf::Shader shader;
+    sf::RectangleShape r(sizeV);
 
-    for (auto x = 0; x < mWidth; ++x) {
-        for (auto y = 0; y < mHeight; ++y) {
-            pts[ptToIdx(x, y)] = sf::Vertex({ static_cast<float>(x), static_cast<float>(y) }, sf::Color::White);
-        }
+    if (!shader.loadFromFile("mandelbrotShader.frag", sf::Shader::Fragment)) {
+        printf("Error loading shader");
     }
+
+    if (!shader.isAvailable()) {
+        printf("Shaders not available");
+    }
+
+    shader.setUniform("u_resolution", sizeV);
+
     while (window.isOpen()) {
         handleEvent(window);
-        if (mRecalcNeeded) {
-            CalcExecTimeWrapper<1>("calcMandelbrot", [this, &pts]() { calcMandelbrot(pts); });
-            mRecalcNeeded = false;
-        }
         window.clear();
-        window.draw(pts);
+
+        shader.setUniform("u_size", mPlaneSize);
+        shader.setUniform("u_center", sf::Vector2f(mPlaneCenter.x, -mPlaneCenter.y)); // shaders have inverted x in respect to sfml
+        shader.setUniform("u_maxIterations", mMaxIterations);
+
+        window.draw(r, &shader);
         window.display();
     }
     return 0;
-}
-
-int Mandelbrot::ptToIdx(int x, int y) const
-{
-    return x + y * mHeight;
 }
