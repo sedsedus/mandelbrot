@@ -46,6 +46,8 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
         "complex": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "thread": "cpp",
+        "future": "cpp"
     }
 }
