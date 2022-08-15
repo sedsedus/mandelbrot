@@ -42,12 +42,14 @@ The application utilizes shaders to delegate the calculations straight to the GP
 - C++17 enabled compiler
 - CMake
 - libsfml-dev
+- Currently only Linux is supported
 
 # TODO
 
 - find an alternative way to pass the color map array to the shader
   - current implementation limits the number of iterations to the number of registers available in the GPU (probably GL_MAX_TEXTURE_SIZE)
 - Make the customization of color map easier
+- Add support for Windows (CMakeLists/sfml)
 
 # Screenshots
 
