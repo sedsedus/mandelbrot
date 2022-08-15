@@ -199,16 +199,18 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
     return { mapToPlaneWidth(wmouse.x), mapToPlaneHeight(wmouse.y) };
 }
 
-void Mandelbrot::setMaxIterations(int maxIterations) {
-    if(maxIterations >= CONFIG_ITERATION_LIMIT || maxIterations <= 1){
+void Mandelbrot::setMaxIterations(int maxIterations)
+{
+    if (maxIterations >= CONFIG_ITERATION_LIMIT || maxIterations <= 1) {
         return;
     }
     mMaxIterations = maxIterations;
     updateColorMap();
 }
 
-void Mandelbrot::updateColorMap() {
-    for(auto i = 0; i <= mMaxIterations; ++i){
+void Mandelbrot::updateColorMap()
+{
+    for (auto i = 0; i <= mMaxIterations; ++i) {
         mVec4Colors[i] = getColor(i, mMaxIterations);
     }
 }
@@ -238,7 +240,7 @@ int Mandelbrot::run()
         shader.setUniform("u_maxIterations", mMaxIterations);
         shader.setUniformArray("u_colors", mVec4Colors.data(), CONFIG_ITERATION_LIMIT);
 
-        window.draw(r, &shader); 
+        window.draw(r, &shader);
         window.display();
     }
     return 0;

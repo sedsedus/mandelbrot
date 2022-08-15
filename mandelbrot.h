@@ -7,7 +7,6 @@
 #include <array>
 #include "config.h"
 
-
 class Mandelbrot
 {
 public:

@@ -48,6 +48,8 @@
         "complex": "cpp",
         "deque": "cpp",
         "thread": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "cstdarg": "cpp",
+        "system_error": "cpp"
     }
 }
