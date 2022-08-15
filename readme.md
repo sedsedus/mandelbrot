@@ -9,7 +9,7 @@
 
 Mandelbrot set graphical visualizer.
 
-Coloring of the individual pixel is based on the amount of iterations (in complex number domain) for the equation: 
+Coloring of the individual pixel is based on the number of iterations (in the complex number domain) for the equation: 
 
 `f(z) = z^2 + c`
 
