@@ -23,6 +23,7 @@ private:
     Mitype mapToPlaneWidth(Mitype v) const;
     Mitype mapToPlaneHeight(Mitype v) const;
     Vector2d getPlaneMouse(sf::RenderWindow &window) const;
+    void setMaxIterations(int maxIterations);
     const int mWidth;
     const int mHeight;
     int mMaxIterations = 100;
