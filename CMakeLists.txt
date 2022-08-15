@@ -14,7 +14,11 @@ target_link_libraries(mandelbrot sfml-graphics pthread)
 target_compile_features(mandelbrot PRIVATE cxx_std_17)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -O2")
+set(ITERATION_LIMIT 1000)
 
-configure_file(mandelbrotShader.frag ${CMAKE_BINARY_DIR} COPYONLY)
+# Copy the shader to build directory
+configure_file(mandelbrotShader.frag.in mandelbrotShader.frag)
+configure_file(config.h.in config.h)
+target_include_directories(mandelbrot PUBLIC "${PROJECT_BINARY_DIR}")
 
 target_sources(mandelbrot PRIVATE main.cpp mandelbrot.cpp)

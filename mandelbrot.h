@@ -4,6 +4,9 @@
 #include <complex>
 #include <utility>
 #include <vector>
+#include <array>
+#include "config.h"
+
 
 class Mandelbrot
 {
@@ -24,10 +27,13 @@ private:
     Mitype mapToPlaneHeight(Mitype v) const;
     Vector2d getPlaneMouse(sf::RenderWindow &window) const;
     void setMaxIterations(int maxIterations);
+    void updateColorMap();
+
     const int mWidth;
     const int mHeight;
     int mMaxIterations = 100;
     sf::Vector2<float> mPlaneSize { 3.0, 3.0 };
     sf::Vector2<float> mPlaneCenter { 0.0, 0.0 };
+    std::array<sf::Glsl::Vec4, CONFIG_ITERATION_LIMIT> mVec4Colors;
     static auto constexpr maxColorValue = 255;
 };

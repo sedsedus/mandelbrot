@@ -103,6 +103,7 @@ sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
 
 Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
 {
+    updateColorMap();
 }
 
 void Mandelbrot::handleEvent(sf::RenderWindow &window)
@@ -203,7 +204,15 @@ void Mandelbrot::setMaxIterations(int maxIterations) {
         return;
     }
     mMaxIterations = maxIterations;
+    updateColorMap();
 }
+
+void Mandelbrot::updateColorMap() {
+    for(auto i = 0; i <= mMaxIterations; ++i){
+        mVec4Colors[i] = getColor(i, mMaxIterations);
+    }
+}
+
 int Mandelbrot::run()
 {
     sf::RenderWindow window(sf::VideoMode(mWidth, mHeight), "Mandelbrot");
@@ -220,7 +229,6 @@ int Mandelbrot::run()
     }
 
     shader.setUniform("u_resolution", sizeV);
-
     while (window.isOpen()) {
         handleEvent(window);
         window.clear();
@@ -228,8 +236,9 @@ int Mandelbrot::run()
         shader.setUniform("u_size", mPlaneSize);
         shader.setUniform("u_center", sf::Vector2f(mPlaneCenter.x, -mPlaneCenter.y)); // shaders have inverted x in respect to sfml
         shader.setUniform("u_maxIterations", mMaxIterations);
+        shader.setUniformArray("u_colors", mVec4Colors.data(), CONFIG_ITERATION_LIMIT);
 
-        window.draw(r, &shader);
+        window.draw(r, &shader); 
         window.display();
     }
     return 0;

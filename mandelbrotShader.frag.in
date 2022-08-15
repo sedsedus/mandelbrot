@@ -5,6 +5,8 @@ precision highp float;
 uniform vec2 u_resolution;
 uniform vec2 u_size;
 uniform vec2 u_center;
+// u_colors is a map: iterations -> color (vec4 from sf::Color) value
+uniform vec4 u_colors[${ITERATION_LIMIT}];
 uniform int u_maxIterations;
 
 // complex number (x + yi) squared is: x^2 - y^2 + 2xyi
@@ -18,12 +20,12 @@ float parabola(float x, float k)
     return pow(4.0 * x * (1.0 - x), k);
 }
 
-// the stop condition is either maxIterations or distance (all mandelbrot points fall in 2.0 circle around center)
+// the stop condition is either maxIterations or distance (all mandelbrot points fall in the 2.0 circle around center)
 int getMandelbrotIterations(vec2 p)
 {
     vec2 m = vec2(0.0, 0.0);
     int i = 0;
-    // |zn| <= 2
+    // |zn| <= 2.0
     // |zn| = sqrt(x^2 + y^2)
     for (i = 0; i < u_maxIterations && sqrt(m.x * m.x + m.y * m.y) <= 2.0; ++i) {
         m = complexPow2(m) + p;
@@ -40,7 +42,6 @@ int getIterations()
 
 void main()
 {
-    float it = (float)getIterations();
-    float scaled = (it / u_maxIterations);
-    gl_FragColor = vec4(scaled, scaled, scaled, 1.0);
+    int i = getIterations();
+    gl_FragColor = u_colors[i];
 }
