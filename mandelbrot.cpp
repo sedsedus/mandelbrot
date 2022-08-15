@@ -174,7 +174,6 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
                 mousePosWhenPres = getPlaneMouse(window);
             }
         }
-        mRecalcNeeded = true;
     }
 }
 

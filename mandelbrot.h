@@ -30,5 +30,4 @@ private:
     sf::Vector2<float> mPlaneSize { 3.0, 3.0 };
     sf::Vector2<float> mPlaneCenter { 0.0, 0.0 };
     static auto constexpr maxColorValue = 255;
-    bool mRecalcNeeded{true};
 };
