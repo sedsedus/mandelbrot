@@ -35,7 +35,7 @@ The application utilizes shaders to delegate the calculations straight to the GP
 
 - zoom in/out with the mouse wheel, or press `PgDn` and `PgUp`
 - move the view by dragging the mouse or using keyboard arrows
-- control the maximum amount of iterations with `+` and `-`
+- control the maximum number of iterations with `+` and `-`
 
 # Requirements
 
@@ -57,7 +57,7 @@ Default view
 
 !["imgs/mandelbrot.png"](imgs/mandelbrot.png)
 
-Reduced amount of iterations
+Reduced number of iterations
 
 !["imgs/mandelbrot-less-iterations.png"](imgs/mandelbrot-less-iterations.png)
 
