@@ -127,7 +127,7 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
             } else if (event.key.code == sf::Keyboard::Right) {
                 mPlaneCenter.x += mPlaneSize.x / 10;
             } else if (event.key.code == sf::Keyboard::Add) {
-                setMaxIterations(std::clamp((int)(mMaxIterations * 1.1), mMaxIterations + 1, CONFIG_ITERATION_LIMIT));
+                setMaxIterations(std::clamp((int)(mMaxIterations * 1.1), mMaxIterations + 1, CONFIG_ITERATION_LIMIT-1));
             } else if (event.key.code == sf::Keyboard::Subtract) {
                 setMaxIterations(std::clamp((int)(mMaxIterations * 0.9), 1, mMaxIterations - 1));
             } else if (event.key.code == sf::Keyboard::PageDown) {
@@ -201,7 +201,7 @@ Mandelbrot::Vector2d Mandelbrot::getPlaneMouse(sf::RenderWindow &window) const
 
 void Mandelbrot::setMaxIterations(int maxIterations)
 {
-    if (maxIterations >= CONFIG_ITERATION_LIMIT || maxIterations <= 1) {
+    if (maxIterations >= CONFIG_ITERATION_LIMIT || maxIterations <= 1 || maxIterations == mMaxIterations) {
         return;
     }
     mMaxIterations = maxIterations;
