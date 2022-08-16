@@ -29,13 +29,15 @@ The application utilizes shaders to delegate the calculations straight to the GP
 - smooth operation up to 1000 iterations 
 - pan & zoom
 - dynamic maximum iteration control
-- colorful visualization with some manual customization options
+- colorful visualization with the help of https://github.com/jgreitemann/colormap.git (./colormap/)
 
 # Controls 
 
 - zoom in/out with the mouse wheel, or press `PgDn` and `PgUp`
 - move the view by dragging the mouse or using keyboard arrows
 - control the maximum number of iterations with `+` and `-`
+- cycle colormaps with `Numpad 8` (forward) and `Numpad 2` (backward)
+- reverse colormap coloring with `r`
 
 # Requirements
 
@@ -48,7 +50,6 @@ The application utilizes shaders to delegate the calculations straight to the GP
 
 - find an alternative way to pass the color map array to the shader
   - current implementation limits the number of iterations to the number of registers available in the GPU (probably GL_MAX_TEXTURE_SIZE)
-- Make the customization of color map easier
 - Add support for Windows (CMakeLists/sfml)
 
 # Screenshots
