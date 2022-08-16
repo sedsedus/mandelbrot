@@ -7,9 +7,6 @@
 #include <utility>
 #include "profile.h"
 
-using Mitype = double;
-using Mtype = std::complex<Mitype>;
-
 template <typename T>
 T constexpr mapToRange(T v, T vMin, T vMax, T toMin, T toMax)
 {
@@ -178,17 +175,17 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
     }
 }
 
-Mitype Mandelbrot::mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const
+Mandelbrot::Mitype Mandelbrot::mapToPlane(Mitype v, Mitype size, Mitype planeCenter, Mitype planeSize) const
 {
     return mapToRange(v, 0.0, static_cast<Mitype>(size), planeCenter - planeSize / 2, planeCenter + planeSize / 2);
 }
 
-Mitype Mandelbrot::mapToPlaneWidth(Mitype x) const
+Mandelbrot::Mitype Mandelbrot::mapToPlaneWidth(Mitype x) const
 {
     return mapToPlane(static_cast<Mitype>(x), static_cast<Mitype>(mWidth), mPlaneCenter.x, mPlaneSize.x);
 }
 
-Mitype Mandelbrot::mapToPlaneHeight(Mitype y) const
+Mandelbrot::Mitype Mandelbrot::mapToPlaneHeight(Mitype y) const
 {
     return mapToPlane(static_cast<Mitype>(y), static_cast<Mitype>(mHeight), mPlaneCenter.y, mPlaneSize.y);
 }
