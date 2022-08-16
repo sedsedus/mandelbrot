@@ -26,7 +26,8 @@ sf::Vector2f GetWorldMouse(sf::RenderWindow &window)
     return worldPos;
 }
 
-Mandelbrot::Mandelbrot(int width, int height, std::string palleteName, bool palleteReversed) : mWidth(width), mHeight(height), mPallete(palleteName), mIsColorMapReversed(palleteReversed)
+Mandelbrot::Mandelbrot(int width, int height, std::string palleteName, bool palleteReversed)
+    : mWidth(width), mHeight(height), mPallete(palleteName), mIsColorMapReversed(palleteReversed)
 {
     updateColorMap();
     for (auto [p, _] : colormap::palettes) {
@@ -56,7 +57,7 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
             } else if (event.key.code == sf::Keyboard::Right) {
                 mPlaneCenter.x += mPlaneSize.x / 10;
             } else if (event.key.code == sf::Keyboard::Add) {
-                setMaxIterations(std::clamp((int)(mMaxIterations * 1.1), mMaxIterations + 1, CONFIG_ITERATION_LIMIT-1));
+                setMaxIterations(std::clamp((int)(mMaxIterations * 1.1), mMaxIterations + 1, CONFIG_ITERATION_LIMIT - 1));
             } else if (event.key.code == sf::Keyboard::Subtract) {
                 setMaxIterations(std::clamp((int)(mMaxIterations * 0.9), 1, mMaxIterations - 1));
             } else if (event.key.code == sf::Keyboard::PageDown) {
