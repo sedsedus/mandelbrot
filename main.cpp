@@ -3,6 +3,6 @@
 
 int main()
 {
-    Mandelbrot m(1000, 1000);
+    Mandelbrot m(1000, 1000, "jet", true);
     return m.run();
 }

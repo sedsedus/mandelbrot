@@ -7,7 +7,6 @@ target_include_directories(mandelbrot PRIVATE /usr/include/SFML)
 
 find_package(SFML 2 COMPONENTS graphics system REQUIRED)
 
-target_link_libraries(mandelbrot sfml-graphics pthread)
 
 target_compile_features(mandelbrot PRIVATE cxx_std_17)
 
@@ -19,8 +18,14 @@ set(ITERATION_LIMIT 1000)
 configure_file(mandelbrotShader.frag.in mandelbrotShader.frag)
 
 configure_file(config.h.in config.h)
-
+ 
 # We need to include the build directory to be able to include config.h
 target_include_directories(mandelbrot PUBLIC "${PROJECT_BINARY_DIR}")
+
+# add colormap 
+add_subdirectory(colormap)
+target_include_directories(mandelbrot PUBLIC colormap/include)
+
+target_link_libraries(mandelbrot sfml-graphics pthread colormap)
 
 target_sources(mandelbrot PRIVATE main.cpp mandelbrot.cpp)

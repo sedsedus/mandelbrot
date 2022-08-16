@@ -6,6 +6,7 @@
 #include <functional>
 #include <utility>
 #include "profile.h"
+#include "colormap/palettes.hpp"
 
 template <typename T>
 T constexpr mapToRange(T v, T vMin, T vMax, T toMin, T toMax)
@@ -25,82 +26,12 @@ sf::Vector2f GetWorldMouse(sf::RenderWindow &window)
     return worldPos;
 }
 
-sf::Color Mandelbrot::getColorOld(int iterations, int maxIterations)
-{
-    auto scaled1 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
-    auto scaled2 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)100, 0.0);
-    auto scaled3 = mapToRange((Mitype)iterations, 0.0, (Mitype)maxIterations, (Mitype)maxColorValue, 0.0);
-    return sf::Color(scaled1, scaled2, scaled3);
-}
-
-sf::Color Mandelbrot::getColor(int iterations, int maxIterations)
-{
-    struct mapping {
-        sf::Vector2i range;
-        std::function<int(int)> fun;
-    };
-    auto const getMapping = [iterations](const auto &mapping) {
-        for (auto m : mapping) {
-            if ((m.range.x <= iterations) && (iterations <= m.range.y)) {
-                return m.fun(iterations);
-            }
-        }
-        return 0;
-    };
-
-    // a = (y2-y1)/(x2-x1)
-    // y = ax + b
-    // b = y1 - a*x1
-    auto const findAB = [](auto x1, auto y1, auto x2, auto y2) {
-        auto a = (y2 - y1) / (x2 - x1);
-        auto b = y1 - a * x1;
-        return std::pair { a, b };
-    };
-    auto const first = sf::Vector2i { 0, maxIterations / 3 };
-    auto const second = sf::Vector2i { maxIterations / 3, 2 * maxIterations / 3 };
-    auto const third = sf::Vector2i { 2 * maxIterations / 3, maxIterations };
-
-    auto const getLn = [findAB](auto range, bool rising) {
-        auto y1 = rising ? 0.0 : maxColorValue;
-        auto y2 = rising ? maxColorValue : 0.0;
-        auto ab = findAB(range.x, y1, range.y, y2);
-        return [ab](int i) { return ab.first * i + ab.second; };
-    };
-    std::vector<mapping> redColor = { { first,
-                                        [](int i) {
-                                            (void)i;
-                                            return 0;
-                                        } },
-                                      { second, [second, getLn](int i) { return getLn(second, true)(i); } },
-                                      { third, [](int i) {
-                                           (void)i;
-                                           return maxColorValue;
-                                       } } };
-
-    std::vector<mapping> greenColor = { { first, [first, getLn](int i) { return getLn(first, true)(i); } },
-                                        { second,
-                                          [](int i) {
-                                              (void)i;
-                                              return maxColorValue;
-                                          } },
-                                        { third, [third, getLn](int i) { return getLn(third, false)(i); } } };
-
-    std::vector<mapping> blueColor = { { first,
-                                         [](int i) {
-                                             (void)i;
-                                             return maxColorValue;
-                                         } },
-                                       { second, [second, getLn](int i) { return getLn(second, false)(i); } },
-                                       { third, [](int i) {
-                                            (void)i;
-                                            return 0;
-                                        } } };
-    return sf::Color(getMapping(redColor), getMapping(greenColor), getMapping(blueColor));
-};
-
-Mandelbrot::Mandelbrot(int width, int height) : mWidth(width), mHeight(height)
+Mandelbrot::Mandelbrot(int width, int height, std::string palleteName, bool palleteReversed) : mWidth(width), mHeight(height), mPallete(palleteName), mIsColorMapReversed(palleteReversed)
 {
     updateColorMap();
+    for (auto [p, _] : colormap::palettes) {
+        mPalletes.push_back(p);
+    }
 }
 
 void Mandelbrot::handleEvent(sf::RenderWindow &window)
@@ -111,6 +42,7 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
     static bool isRightPressed = false;
     static bool isMiddlePressed = false;
     static Vector2d mousePosWhenPres;
+    auto static selectedPallete = 0;
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
@@ -133,6 +65,17 @@ void Mandelbrot::handleEvent(sf::RenderWindow &window)
             } else if (event.key.code == sf::Keyboard::PageUp) {
                 mPlaneSize.x *= 1.1;
                 mPlaneSize.y *= 1.1;
+            } else if (event.key.code == sf::Keyboard::Numpad8) {
+                selectedPallete = (selectedPallete + 1) % mPalletes.size();
+                mPallete = mPalletes[selectedPallete];
+                updateColorMap();
+            } else if (event.key.code == sf::Keyboard::Numpad2) {
+                selectedPallete = (selectedPallete - 1) % mPalletes.size();
+                mPallete = mPalletes[selectedPallete];
+                updateColorMap();
+            } else if (event.key.code == sf::Keyboard::R) {
+                mIsColorMapReversed ^= true;
+                updateColorMap();
             }
         } else if (event.type == sf::Event::MouseWheelMoved) {
             float dzoom = static_cast<float>(-event.mouseWheel.delta) / 10;
@@ -207,9 +150,14 @@ void Mandelbrot::setMaxIterations(int maxIterations)
 
 void Mandelbrot::updateColorMap()
 {
+    auto const &colorMap = colormap::palettes.at(mPallete);
+
     for (auto i = 0; i <= mMaxIterations; ++i) {
-        mVec4Colors[i] = getColor(i, mMaxIterations);
+        auto ratio = (double)i / mMaxIterations;
+        auto v = colorMap(mIsColorMapReversed ? 1 - ratio : ratio);
+        mVec4Colors[i] = sf::Color(v.getRed().getValue(), v.getGreen().getValue(), v.getBlue().getValue());
     }
+    printf("Using colormap '%s'%s max iterations: %d\n", mPallete.c_str(), mIsColorMapReversed ? "(reversed)" : "", mMaxIterations);
 }
 
 int Mandelbrot::run()
