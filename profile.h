@@ -18,7 +18,7 @@
 #pragma once
 
 template <int id, class Callable, typename... Args>
-auto CalcExecTimeWrapper(const char *const desc, Callable fun, Args &&... args) -> decltype(fun(args...))
+auto CalcExecTimeWrapper(const char *const desc, Callable fun, Args &&...args) -> decltype(fun(args...))
 {
     static int ticks = 0;
     static float total_sum = 0;
