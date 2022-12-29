@@ -180,19 +180,21 @@ void Mandelbrot::updateColorMap()
 int Mandelbrot::run()
 {
     sf::RenderWindow window(sf::VideoMode(mWidth, mHeight), "Mandelbrot");
-    auto sizeV = sf::Vector2f { (float)mWidth, (float)mHeight };
+    const auto size = sf::Vector2f { (float)mWidth, (float)mHeight };
     sf::Shader shader;
-    sf::RectangleShape r(sizeV);
+    const sf::RectangleShape plane(size);
 
     if (!shader.loadFromFile("mandelbrotShader.frag", sf::Shader::Fragment)) {
         printf("Error loading shader");
+        return 1;
     }
 
     if (!shader.isAvailable()) {
         printf("Shaders not available");
+        return 1;
     }
 
-    shader.setUniform("u_resolution", sizeV);
+    shader.setUniform("u_resolution", size);
     while (window.isOpen()) {
         handleEvent(window);
         window.clear();
@@ -202,7 +204,7 @@ int Mandelbrot::run()
         shader.setUniform("u_maxIterations", mMaxIterations);
         shader.setUniformArray("u_colors", mVec4Colors.data(), CONFIG_ITERATION_LIMIT);
 
-        window.draw(r, &shader);
+        window.draw(plane, &shader);
         window.display();
     }
     return 0;
