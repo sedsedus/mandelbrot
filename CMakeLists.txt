@@ -26,6 +26,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_BINARY_DIR}")
 add_subdirectory(colormap)
 target_include_directories(${PROJECT_NAME} PUBLIC colormap/include)
 
-target_link_libraries(${PROJECT_NAME} sfml-graphics pthread colormap)
+target_link_libraries(${PROJECT_NAME} sfml-graphics colormap)
 
 target_sources(${PROJECT_NAME} PRIVATE main.cpp mandelbrot.cpp)
