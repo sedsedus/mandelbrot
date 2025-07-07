@@ -29,7 +29,7 @@ uniform int u_maxIterations;
 // complex number (x + yi) squared is: x^2 - y^2 + 2xyi
 vec2 complexPow2(vec2 n)
 {
-    return vec2(n.x * n.x - n.y * n.y, 2 * (n.x * n.y));
+    return vec2(n.x * n.x - n.y * n.y, 2.0 * (n.x * n.y));
 }
 
 float parabola(float x, float k)

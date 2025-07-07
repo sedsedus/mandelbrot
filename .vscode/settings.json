@@ -50,6 +50,13 @@
         "thread": "cpp",
         "future": "cpp",
         "cstdarg": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "ratio": "cpp",
+        "bitset": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "queue": "cpp",
+        "set": "cpp"
     }
 }
