@@ -1,0 +1,84 @@
+// mandelbrot -- interactive mandelbrot set explorer
+// Copyright (C) 2022 sedsedus
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform vec2 u_resolution;
+uniform vec2 u_size;
+uniform vec2 u_center;
+uniform vec2 u_const;
+// u_colors is a map: iterations -> color (vec4 from sf::Color) value
+uniform vec4 u_colors[${ITERATION_LIMIT}];
+uniform int u_maxIterations;
+
+// complex number (x + yi) squared is: x^2 - y^2 + 2xyi
+vec2 complexPow2(vec2 n)
+{
+    return vec2(n.x * n.x - n.y * n.y, 2.0 * (n.x * n.y));
+}
+
+float parabola(float x, float k)
+{
+    return pow(4.0 * x * (1.0 - x), k);
+}
+
+// the stop condition is either maxIterations or distance (all mandelbrot points fall in the 2.0 circle around center)
+int getJuliaIterations(vec2 p)
+{
+    vec2 m = p;
+    int i = 0;
+    // |zn| <= 2.0
+    // |zn| = sqrt(x^2 + y^2)
+    for (i = 0; i < u_maxIterations && sqrt(m.x * m.x + m.y * m.y) <= 2.0; ++i) {
+        m = complexPow2(m) - +vec2(1,1)+ 2.0*gl_FragCoord.xy / u_resolution;
+    }
+    return i;
+}
+
+vec2 modulo(vec2 v, vec2 range) {
+    v = mod(v, 2.0f * range);
+
+    if(v.x > range.x) {
+        v.x -= 2.0f * range.x;
+    } else if(v.x < -range.x) {
+        v.x += 2.0f * range.x;
+    }
+
+    if(v.y > range.y) {
+        v.y -= 2.0f * range.y;
+    } else if(v.y < -range.y) {
+        v.y += 2.0f * range.y;
+    }
+
+    return v;
+}
+
+int getIterations()
+{
+    vec2 sc = gl_FragCoord.xy / u_resolution;
+    vec2 p = sc * u_size + u_center - u_size / 2.0;
+    p = modulo(p, vec2(2.1f));
+    return getJuliaIterations(p);
+}
+
+void main()
+{
+    int i = getIterations();
+    gl_FragColor = u_colors[i];
+}
