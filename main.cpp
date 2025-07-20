@@ -18,8 +18,14 @@
 #include "mandelbrot.h"
 #include <cstdio>
 
-int main()
+int main(int argc, char *argv[])
 {
-    Mandelbrot m(1000, 1000, "jet", true);
+    ShaderType shaderType = ShaderType::Mandelbrot;
+    if (argc > 1) {
+        if (std::string(argv[1]) == "--julia") {
+            shaderType = ShaderType::Julia;
+        }
+    }
+    Mandelbrot m({ 1000, 1000, "jet", true, shaderType });
     return m.run();
 }

@@ -22,6 +22,7 @@ precision highp float;
 uniform vec2 u_resolution;
 uniform vec2 u_size;
 uniform vec2 u_center;
+
 // u_colors is a map: iterations -> color (vec4 from sf::Color) value
 uniform vec4 u_colors[${ITERATION_LIMIT}];
 uniform int u_maxIterations;

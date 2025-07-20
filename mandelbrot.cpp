@@ -42,8 +42,8 @@ sf::Vector2f GetWorldMouse(sf::RenderWindow &window)
     return worldPos;
 }
 
-Mandelbrot::Mandelbrot(int width, int height, std::string palleteName, bool palleteReversed)
-    : mWidth(width), mHeight(height), mPallete(palleteName), mIsColorMapReversed(palleteReversed)
+Mandelbrot::Mandelbrot(const Config &config)
+    : mWidth(config.width), mHeight(config.height), mPallete(config.palleteName), mIsColorMapReversed(config.palleteReversed), mShaderType(config.shaderType)
 {
     updateColorMap();
     for (auto [p, _] : colormap::palettes) {
@@ -183,8 +183,9 @@ int Mandelbrot::run()
     const auto size = sf::Vector2f { (float)mWidth, (float)mHeight };
     sf::Shader shader;
     const sf::RectangleShape plane(size);
+    std::map<ShaderType, std::string> shaderFiles = { { ShaderType::Mandelbrot, "mandelbrotShader.frag" }, { ShaderType::Julia, "juliaShader.frag" } };
 
-    if (!shader.loadFromFile("mandelbrotShader.frag", sf::Shader::Fragment)) {
+    if (!shader.loadFromFile(shaderFiles.at(mShaderType), sf::Shader::Fragment)) {
         printf("Error loading shader");
         return 1;
     }
@@ -202,6 +203,11 @@ int Mandelbrot::run()
         shader.setUniform("u_size", mPlaneSize);
         shader.setUniform("u_center", sf::Vector2f(mPlaneCenter.x, -mPlaneCenter.y)); // shaders have inverted x in respect to sfml
         shader.setUniform("u_maxIterations", mMaxIterations);
+
+        if (mShaderType == ShaderType::Julia) {
+            shader.setUniform("u_const", mConst);
+        }
+
         shader.setUniformArray("u_colors", mVec4Colors.data(), CONFIG_ITERATION_LIMIT);
 
         window.draw(plane, &shader);

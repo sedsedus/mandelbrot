@@ -3,7 +3,7 @@ project(mandelbrot)
 
 add_executable(${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME} PRIVATE /usr/include/SFML)
+target_include_directories(${PROJECT_NAME} PRIVATE /opt/sfml2/include)
 
 find_package(SFML 2 COMPONENTS graphics system REQUIRED)
 
@@ -16,6 +16,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -O2")
 set(ITERATION_LIMIT 1000)
 
 configure_file(mandelbrotShader.frag.in mandelbrotShader.frag)
+configure_file(juliaShader.frag.in juliaShader.frag)
 
 configure_file(config.h.in config.h)
  

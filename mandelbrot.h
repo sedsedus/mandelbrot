@@ -26,10 +26,19 @@
 #include "config.h"
 #include "colormap/colormap.hpp"
 
+enum class ShaderType { Mandelbrot, Julia };
+
 class Mandelbrot
 {
 public:
-    Mandelbrot(int width, int height, std::string palleteName, bool palleteReversed);
+    struct Config {
+        int width = 100;
+        int height = 100;
+        std::string palleteName = "jet";
+        bool palleteReversed = true;
+        ShaderType shaderType = ShaderType::Mandelbrot;
+    };
+    Mandelbrot(const Config &config);
     int run();
 
 private:
@@ -45,14 +54,17 @@ private:
     void setMaxIterations(int maxIterations);
     void updateColorMap();
 
-    const int mWidth;
-    const int mHeight;
+    int mWidth;
+    int mHeight;
     int mMaxIterations = 100;
     std::string mPallete;
     bool mIsColorMapReversed;
     std::vector<std::string> mPalletes;
     sf::Vector2<float> mPlaneSize { 3.0, 3.0 };
     sf::Vector2<float> mPlaneCenter { -0.6, 0.0 };
+    sf::Vector2<float> mConst { 0.0, 0.0 };
+    sf::Vector2<float> mMousePosition { 0.0, 0.0 };
     std::array<sf::Glsl::Vec4, CONFIG_ITERATION_LIMIT> mVec4Colors;
     static auto constexpr maxColorValue = 255;
+    ShaderType mShaderType = ShaderType::Mandelbrot;
 };
