@@ -52,18 +52,18 @@ int getJuliaIterations(vec2 p)
 }
 
 vec2 modulo(vec2 v, vec2 range) {
-    v = mod(v, 2.0f * range);
+    v = mod(v, 2.0 * range);
 
     if(v.x > range.x) {
-        v.x -= 2.0f * range.x;
+        v.x -= 2.0 * range.x;
     } else if(v.x < -range.x) {
-        v.x += 2.0f * range.x;
+        v.x += 2.0 * range.x;
     }
 
     if(v.y > range.y) {
-        v.y -= 2.0f * range.y;
+        v.y -= 2.0 * range.y;
     } else if(v.y < -range.y) {
-        v.y += 2.0f * range.y;
+        v.y += 2.0 * range.y;
     }
 
     return v;
@@ -73,7 +73,7 @@ int getIterations()
 {
     vec2 sc = gl_FragCoord.xy / u_resolution;
     vec2 p = sc * u_size + u_center - u_size / 2.0;
-    p = modulo(p, vec2(2.1f));
+    p = modulo(p, vec2(2.0));
     return getJuliaIterations(p);
 }
 

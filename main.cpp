@@ -26,6 +26,6 @@ int main(int argc, char *argv[])
             shaderType = ShaderType::Julia;
         }
     }
-    Mandelbrot m({ 1000, 1000, "jet", true, shaderType });
+    Mandelbrot m({ 1000, 1000, "jet", false, shaderType });
     return m.run();
 }
